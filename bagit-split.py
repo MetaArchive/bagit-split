@@ -1,23 +1,29 @@
 #!/usr/bin/env python
-
 """
-Bag Split Validator
+BagIt Splitting and Unsplitting Tools
 by Stephen Eisenhauer
 
-(Run it after you've used the bagit split tool.)
+This tool has two modes:
+
+ * split
+
+   Run after using the BagIt Library's split operation to perform integrity
+   checks and to preserve the original bag's metadata along with the split bags
+
+   Command-line usage:
+      % python bag-unsplitter.py split /path/to/bag
+
+ * unsplit
+
+   Run against a directory containing split bags to reconstruct (unsplit) a
+   copy of the original bag
+
+   API Usage:
+      bag = unsplit("/parent/dir/of/bags")
+
+   Command-line usage:
+      % python bag-unsplitter.py unsplit /parent/dir/of/bags
 """
-"""
-Split Bag Reconstruction Experiment
-by Stephen Eisenhauer
-
-API Usage:
-    bag = unsplit("/parent/dir/of/bags")
-
-Command-line usage (TODO):
-    % unsplit.py /parent/dir/of/bags
-
-"""
-
 import argparse
 import sys
 import os
@@ -30,7 +36,6 @@ def make_metadata_bag(bag_dir, bags_dir=None):
     """
     Store the bag's metadata files in a new bag alongside split bags
     """
-
     if bags_dir == None:
         bags_dir = bag_dir + "_split"
 
@@ -44,12 +49,12 @@ def make_metadata_bag(bag_dir, bags_dir=None):
 
     # Get bag directory name (by itself)
     bag_name = os.path.basename(os.path.abspath(bag_dir))
-    
+
     # Set up our new metadata bag directory
     meta_bag_name = bag_name + "_metadata"
     meta_bag_path = os.path.join(bags_dir, meta_bag_name)
     os.makedirs(meta_bag_path)
-    
+
     # Copy the bag's metadata files to the new metadata bag directory
     for f in os.listdir(bag_dir):
         print "Found file: " + f
@@ -64,6 +69,7 @@ def make_metadata_bag(bag_dir, bags_dir=None):
     meta_bag = bagit.make_bag(meta_bag_path)
 
     return meta_bag
+
 
 def verify_split(bag_dir, bags_dir=None, no_verify=False):
     """
@@ -84,7 +90,7 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
     os.chdir(bags_dir)
     bags = []               # Bag objects will go in here
     all_entries = dict()    # Manifest entries will get collected in here
-    
+
     # Collect all the split Bag objects we wish to check
     for f in os.listdir('.'):
         if os.path.isdir(os.path.join(bags_dir, f)):
@@ -117,16 +123,19 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
 
     # Compare sums to accumulated sub-bag sums
     if original_bag.entries == all_entries:
-        print "Original manifest entries appear to be identical to the split manifests' entries."
+        print "Original manifest entries appear to be identical to the split "
+        "manifests' entries."
     else:
-        print "Original manifest does NOT appear consistent with the split manifests! Diff:"
-        diff = set(original_bag.entries)-set(all_entries)
+        print "Original manifest does NOT appear consistent with the split "
+        "manifests! Diff:"
+        diff = set(original_bag.entries) - set(all_entries)
         print diff
-        diff = set(all_entries)-set(original_bag.entries)
+        diff = set(all_entries) - set(original_bag.entries)
         print diff
         errors = True
 
     return not errors
+
 
 def unsplit(bags_dir, no_verify=False):
     """
@@ -154,9 +163,9 @@ def unsplit(bags_dir, no_verify=False):
                 if bag.validate():
                     all_entries.update(bag.entries)
                     bag.common_info = bag.info
-                    bag.common_info.pop("Payload-Oxum", None) # Will regenerate
-                    bag.common_info.pop("Bag-Size", None)     # Won't be correct
-                    bag.common_info.pop("Bag-Count", None)    # Not applicable
+                    bag.common_info.pop("Payload-Oxum", None)
+                    bag.common_info.pop("Bag-Size", None)
+                    bag.common_info.pop("Bag-Count", None)
                     bags.append(bag)
                     print "validated."
                 else:
@@ -171,7 +180,7 @@ def unsplit(bags_dir, no_verify=False):
     common_info = bags[0].common_info
     for bag in bags:
         if bag.common_info != common_info:
-            print "Woah! metadata from %s does not match the first bag..." % bag.path
+            print "Metadata from %s does not match the first bag..." % bag.path
             raise RuntimeError("bag metadata mismatch in bag: %s" % bag.path)
 
     # Begin creating merged bag
@@ -188,10 +197,13 @@ def unsplit(bags_dir, no_verify=False):
 
     # Compare sums to accumulated sub-bag sums
     if merged_bag.entries == all_entries:
-        print "New manifest entries appear to be identical to the split manifests' entries."
+        print "New manifest entries appear to be identical to the split "
+        "manifests' entries."
     else:
-        print "New manifest does NOT appear consistent with the split manifests!"
-        raise RuntimeError("merged bag manifest inconsistent with split manifests")
+        print "New manifest does NOT appear consistent with the split "
+        "manifests!"
+        raise RuntimeError("merged bag manifest inconsistent with split "
+        "manifests")
 
     # If _metadata bag is present, unpack it in merged bag's root
     if (meta_bag_path):
@@ -216,6 +228,7 @@ def unsplit(bags_dir, no_verify=False):
                 raise RuntimeError("merged bag failed validation")
 
     return merged_bag
+
 
 def mergetree(src, dst, symlinks=False, ignore=None):
     """
@@ -266,9 +279,10 @@ def mergetree(src, dst, symlinks=False, ignore=None):
     if errors:
         raise shutil.Error(errors)
 
+
 def _make_arg_parser():
-    parser = argparse.ArgumentParser(description=
-        'Tools for splitting/unsplitting BagIt bags.')
+    parser = argparse.ArgumentParser(
+        description='Tools for splitting/unsplitting BagIt bags.')
     parser.add_argument('operation', choices=['split', 'unsplit'],
         help="selects which operation to perform")
     parser.add_argument('bag',
@@ -278,11 +292,12 @@ def _make_arg_parser():
 
     return parser
 
+
 if __name__ == "__main__":
     parser = _make_arg_parser()
     args = parser.parse_args()
     bag_path = os.path.abspath(args.bag)
-    
+
     if args.operation == "split":
         verify_split(bag_path, None, args.no_verify)
         make_metadata_bag(bag_path)
