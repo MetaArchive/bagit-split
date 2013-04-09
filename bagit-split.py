@@ -158,16 +158,24 @@ def unsplit(bags_dir, no_verify=False):
         if os.path.isdir(os.path.join(bags_dir, f)):
             # If f appears to be a sub-bag (ending in _#)
             if re.match(".*_[0-9]+$", f):
-                print "Validating bag %s..." % f,
                 bag = bagit.Bag(f)
-                if bag.validate():
+
+                if no_verify:
+                    verified = True
+                    print "Skipping verification for bag %s." % f
+                else:
+                    print "Validating bag %s..." % f,
+                    verified = bag.validate()
+
+                if verified:
                     all_entries.update(bag.entries)
                     bag.common_info = bag.info
                     bag.common_info.pop("Payload-Oxum", None)
                     bag.common_info.pop("Bag-Size", None)
                     bag.common_info.pop("Bag-Count", None)
+                    bag.common_info.pop("Bagging-Date", None)
                     bags.append(bag)
-                    print "validated."
+                    print "success."
                 else:
                     print "failed!"
             # If f appears to be a metadata bag
@@ -181,6 +189,10 @@ def unsplit(bags_dir, no_verify=False):
     for bag in bags:
         if bag.common_info != common_info:
             print "Metadata from %s does not match the first bag..." % bag.path
+            print "First bag (%s) metadata:" % bags[0].path
+            print common_info
+            print "Bag %s metadata:" % bag.path
+            print bag.common_info
             raise RuntimeError("bag metadata mismatch in bag: %s" % bag.path)
 
     # Begin creating merged bag
