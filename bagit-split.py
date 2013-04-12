@@ -137,7 +137,7 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
     return not errors
 
 
-def unsplit(bags_dir, no_verify=False):
+def unsplit(bags_dir, merged_path=False, no_verify=False):
     """
     Unsplit (merge) the bags in a given directory.
     """
@@ -195,8 +195,22 @@ def unsplit(bags_dir, no_verify=False):
             print bag.common_info
             raise RuntimeError("bag metadata mismatch in bag: %s" % bag.path)
 
-    # Begin creating merged bag
-    merged_path = os.path.join(bags_dir, '..', "MERGED_BAG")
+    # Come up with a name for the merged bag folder
+    if merged_path:
+        merged_path = os.path.abspath(merged_path)
+    else:
+        path, bags_dir_name = os.path.split(bags_dir)
+        match = re.match("(.*)_split$", bags_dir_name)
+        if match:
+            merged_name = match.group(1)
+        else:
+            merged_name = 'MERGED_BAG'
+        merged_path = os.path.join(bags_dir, '..', merged_name)
+        merged_path = os.path.abspath(merged_path)
+
+    # Make sure the path isn't already taken, then create the folder
+    if os.path.isdir(merged_path):
+        raise RuntimeError("destination directory exists: %s" % merged_path)
     os.mkdir(merged_path)
 
     # Copy payloads from bags into merged bag payload
@@ -238,6 +252,8 @@ def unsplit(bags_dir, no_verify=False):
             else:
                 print "The final merged bag failed to validate!"
                 raise RuntimeError("merged bag failed validation")
+
+    print "The merged bag was written to: %s" % merged_path
 
     return merged_bag
 
