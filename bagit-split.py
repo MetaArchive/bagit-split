@@ -147,6 +147,7 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
         raise RuntimeError("no such bags directory %s" % bags_dir)
 
     # Let's get set up
+    working_dir = os.getcwd()
     os.chdir(bags_dir)
     bags = []               # Bag objects will go in here
     all_entries = dict()    # Manifest entries will get collected in here
@@ -197,7 +198,7 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
 
     # Come up with a name for the merged bag folder
     if merged_path:
-        merged_path = os.path.abspath(merged_path)
+        merged_path = os.path.abspath(os.path.join(working_dir, merged_path))
     else:
         path, bags_dir_name = os.path.split(bags_dir)
         match = re.match("(.*)_split$", bags_dir_name)
@@ -206,7 +207,7 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
         else:
             merged_name = 'MERGED_BAG'
         merged_path = os.path.join(bags_dir, '..', merged_name)
-        merged_path = os.path.abspath(merged_path)
+    merged_path = os.path.abspath(merged_path)  # Clean up /../ instances
 
     # Make sure the path isn't already taken, then create the folder
     if os.path.isdir(merged_path):
@@ -317,6 +318,10 @@ def _make_arg_parser():
         help="path to the bag being split (or parent of bags being unsplit)")
     parser.add_argument('--no-verify', action="store_true",
         help="skips checksum validation (not recommended)")
+    parser.add_argument('-o', '--output-dir',
+        help="directory name to use for the merged bag (when unsplitting). "
+        "(relative to working directory)"
+    )
 
     return parser
 
@@ -331,4 +336,4 @@ if __name__ == "__main__":
         make_metadata_bag(bag_path)
 
     elif args.operation == "unsplit":
-        unsplit(bag_path, args.no_verify)
+        unsplit(bag_path, args.output_dir, args.no_verify)
