@@ -205,7 +205,7 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
         if match:
             merged_name = match.group(1)
         else:
-            merged_name = 'MERGED_BAG'
+            merged_name = "%s_merged" % bags_dir_name
         merged_path = os.path.join(bags_dir, '..', merged_name)
     merged_path = os.path.abspath(merged_path)  # Clean up /../ instances
 
