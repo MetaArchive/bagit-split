@@ -27,7 +27,7 @@ fi
 # Files named Thumbs.db
 find $DIR -iname "Thumbs.db"
 
-# Names with leading punctuation
+# Names with leading punctuation (including .DS_Store)
 find $DIR -name ".*"
 find $DIR -name "_*"
 find $DIR -name "-*"

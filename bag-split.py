@@ -11,7 +11,7 @@ This tool has two modes:
    checks and to preserve the original bag's metadata along with the split bags
 
    Command-line usage:
-      % python bag-unsplitter.py split /path/to/bag
+      % python bag-split.py split /path/to/bag
 
  * unsplit
 
@@ -22,7 +22,7 @@ This tool has two modes:
       bag = unsplit("/parent/dir/of/bags")
 
    Command-line usage:
-      % python bag-unsplitter.py unsplit /parent/dir/of/bags
+      % python bag-split.py unsplit /parent/dir/of/bags
 """
 import argparse
 import sys
