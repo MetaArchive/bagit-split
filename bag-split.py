@@ -53,6 +53,11 @@ def make_metadata_bag(bag_dir, bags_dir=None):
     # Set up our new metadata bag directory
     meta_bag_name = bag_name + "_metadata"
     meta_bag_path = os.path.join(bags_dir, meta_bag_name)
+    if os.path.isdir(meta_bag_path):
+        print "Metadata bag already exists. To regenerate it, remove it and " \
+              "then try again."
+        return False
+    print "Creating metadata bag: %s" % meta_bag_name
     os.makedirs(meta_bag_path)
 
     # Copy the bag's metadata files to the new metadata bag directory
@@ -123,11 +128,11 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
 
     # Compare sums to accumulated sub-bag sums
     if original_bag.entries == all_entries:
-        print "Original manifest entries appear to be identical to the split "
-        "manifests' entries."
+        print "Original manifest entries appear to be identical to the split " \
+              "manifests' entries."
     else:
-        print "Original manifest does NOT appear consistent with the split "
-        "manifests! Diff:"
+        print "Original manifest does NOT appear consistent with the split " \
+              "manifests! Diff:"
         diff = set(original_bag.entries) - set(all_entries)
         print diff
         diff = set(all_entries) - set(original_bag.entries)
@@ -224,13 +229,13 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
 
     # Compare sums to accumulated sub-bag sums
     if merged_bag.entries == all_entries:
-        print "New manifest entries appear to be identical to the split "
-        "manifests' entries."
+        print "New manifest entries appear to be identical to the split " \
+              "manifests' entries."
     else:
-        print "New manifest does NOT appear consistent with the split "
-        "manifests!"
-        raise RuntimeError("merged bag manifest inconsistent with split "
-        "manifests")
+        print "New manifest does NOT appear consistent with the split " \
+              "manifests!"
+        raise RuntimeError("merged bag manifest inconsistent with split " \
+                           "manifests")
 
     # If _metadata bag is present, unpack it in merged bag's root
     if (meta_bag_path):
@@ -319,8 +324,8 @@ def _make_arg_parser():
     parser.add_argument('--no-verify', action="store_true",
         help="skips checksum validation (not recommended)")
     parser.add_argument('-o', '--output-dir',
-        help="directory name to use for the merged bag (when unsplitting). "
-        "(relative to working directory)"
+        help="directory name to use for the merged bag (when unsplitting). " \
+             "(relative to working directory)"
     )
 
     return parser
