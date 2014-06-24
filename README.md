@@ -10,12 +10,12 @@ identical to the original.
 
 To see the full command-line help text, do:
 
-    $ python bagit-split.py --help
+    $ python bag-split.py --help
 
 ### Splitting a Bag
 
     $ bag splitbagbysize <BAG> --maxbagsize 30
-    $ python bagit-split.py split <BAG>
+    $ python bag-split.py split <BAG>
 
 The first command above uses the official BagIt command-line utility
 (`bag`) to split the original <BAG>, in this example using 30GB as the
@@ -28,7 +28,7 @@ state of the original bag's metadata).
 
 ### Unsplitting a Bag
 
-    $ python bagit-split.py unsplit <DIRECTORY CONTAINING BAGS>
+    $ python bag-split.py unsplit <DIRECTORY CONTAINING BAGS>
 
 This command creates a new directory called `MERGED_BAG` by merging the
 bags found inside <DIRECTORY CONTAINING BAGS> into a single reconstructed
