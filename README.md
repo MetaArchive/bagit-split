@@ -29,7 +29,7 @@ per-bag limit. You can also use --maxbagsize values like .001 to indicate
 The second command uses this tool to verify the split bags against the
 original bag for integrity and completeness, as well as to create an
 additional "metadata" bag among the split bags; the /data directory of 
-the metadata bag will contains the original bag's manifests and bag-info.txt file.
+the metadata bag will contain the original bag's manifests and bag-info.txt file.
 
 ### Unsplitting a Bag
 
@@ -38,10 +38,10 @@ the metadata bag will contains the original bag's manifests and bag-info.txt fil
 This command creates a new directory called `MERGED_BAG` by merging the
 bags found inside <DIRECTORY CONTAINING BAGS> into a single reconstructed
 bag.  The tool will check that the reconstructed bag is a faithful
-reconstruction of the original. If the input directory's name contained "_split"
-at the end (this is added by the LoC tool when it splits a bag), the resulting 
-directory will have "_split" removed; if the input directory name did not end 
-in "_split", "_merged" will be added.
+reconstruction of the original. If the input directory's name ended in "_split"
+(this is added by the LoC tool when it splits a bag), the resulting directory will 
+have the same name with "_split" removed; if the input directory name did not end 
+in "_split", "_merged" will be added to the name of the input directory.
 
 ## License
 
