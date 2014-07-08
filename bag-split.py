@@ -75,7 +75,18 @@ def make_metadata_bag(bag_dir, bags_dir=None):
 
     return meta_bag
 
-
+def compare_payloads(new_entries, original_entries):
+    """
+    Where new_entries and original_entries are the entry format
+    returned by bagit.Bag, return true if all of the payload
+    entries match
+    """
+    for key, value in new_entries.iteritems():
+        if key.startswith("data/"):
+            if value != original_entries[key]:
+                return False
+    return True
+    
 def verify_split(bag_dir, bags_dir=None, no_verify=False):
     """
     Verify that a bag split went okay.
@@ -107,12 +118,15 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
                 print "Verifying bag %s..." % f,
                 if bag.validate():
                     #bags.append(bag)
-                    all_entries.update(bag.entries)
+                    if not f.endswith("_metadata"):
+                        #Don't add the entries from the metadata bag, since these aren't part
+                        #of the original payload
+                        all_entries.update(bag.entries)
                     print "success."
                 else:
                     print "failed!"
                     errors = True
-    bags.sort(key=lambda bag: bag.path)
+    #bags.sort(key=lambda bag: bag.path)
 
     # Start looking at the original (pre-split) Bag
     original_bag = bagit.Bag(bag_dir)
@@ -127,7 +141,8 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
             errors = True
 
     # Compare sums to accumulated sub-bag sums
-    if original_bag.entries == all_entries:
+    #if original_bag.entries == all_entries:
+    if compare_payloads(all_entries, original_bag.entries):
         print "Original manifest entries appear to be identical to the split " \
               "manifests' entries."
     else:
