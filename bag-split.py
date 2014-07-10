@@ -243,7 +243,8 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
     merged_bag = bagit.make_bag(merged_path, common_info)
 
     # Compare sums to accumulated sub-bag sums
-    if merged_bag.entries == all_entries:
+    #if merged_bag.entries == all_entries
+    if compare_payloads(merged_bag.entries, all_entries):
         print "New manifest entries appear to be identical to the split " \
               "manifests' entries."
     else:
