@@ -368,7 +368,7 @@ def mergetree(src, dst, symlinks=False, ignore=None):
 def _make_arg_parser():
     parser = argparse.ArgumentParser(
         description='Tools for splitting/unsplitting BagIt bags.')
-    parser.add_argument('operation', choices=['split', 'unsplit'],
+    parser.add_argument('operation', choices=['splitcheck', 'unsplit'],
         help="selects which operation to perform")
     parser.add_argument('bag',
         help="path to the bag being split (or parent of bags being unsplit)")
@@ -387,9 +387,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
     bag_path = os.path.abspath(args.bag)
 
-    if args.operation == "split":
-        verify_split(bag_path, None, args.no_verify)
-        make_metadata_bag(bag_path)
+    if args.operation == "splitcheck":
+        result = verify_split(bag_path, None, args.no_verify)
+        if result:
+            make_metadata_bag(bag_path)
 
     elif args.operation == "unsplit":
         unsplit(bag_path, args.output_dir, args.no_verify)
