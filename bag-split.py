@@ -5,13 +5,17 @@ by Stephen Eisenhauer
 
 This tool has two modes:
 
- * split
+ * splitcheck
 
    Run after using the BagIt Library's split operation to perform integrity
    checks and to preserve the original bag's metadata along with the split bags
 
    Command-line usage:
-      % python bag-split.py split /path/to/bag
+      % python bag-split.py splitcheck /path/to/bag
+
+   API USage:
+      result = verify_split("/original/bag/directory", bags_dir=None, no_verify=False)
+      result is a value of True or False
 
  * unsplit
 
@@ -388,9 +392,17 @@ if __name__ == "__main__":
     bag_path = os.path.abspath(args.bag)
 
     if args.operation == "splitcheck":
-        result = verify_split(bag_path, None, args.no_verify)
-        if result:
-            make_metadata_bag(bag_path)
+        try:
+            result = verify_split(bag_path, None, args.no_verify)
+            if result:
+                make_metadata_bag(bag_path)
+        except Exception, e:
+            print "An error has occurred: %s" % e
+            sys.exit(1)
 
     elif args.operation == "unsplit":
-        unsplit(bag_path, args.output_dir, args.no_verify)
+        try:
+            unsplit(bag_path, args.output_dir, args.no_verify)
+        except Exception, e:
+            print "An error has occurred: %s" % e
+            sys.exit(1)
