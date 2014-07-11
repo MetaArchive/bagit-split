@@ -51,7 +51,7 @@ def make_metadata_bag(bag_dir, bags_dir=None):
     bag_name = os.path.basename(os.path.abspath(bag_dir))
 
     # Set up our new metadata bag directory
-    meta_bag_name = bag_name + "_metadata"
+    meta_bag_name = bag_name + "__metadata"
     meta_bag_path = os.path.join(bags_dir, meta_bag_name)
     if os.path.isdir(meta_bag_path):
         print "Metadata bag already exists. To regenerate it, remove it and " \
@@ -81,12 +81,37 @@ def compare_payloads(new_entries, original_entries):
     returned by bagit.Bag, return true if all of the payload
     entries match
     """
-    for key, value in new_entries.iteritems():
+
+    match = True
+    missing_entries = {}
+
+    new_entries_payload_keys = []
+    original_entries_payload_keys = []
+
+    for key in new_entries.keys():
         if key.startswith("data/"):
-            if value != original_entries[key]:
-                return False
-    return True
+            new_entries_payload_keys.append(key)
+
+    for key in original_entries.keys():
+        if key.startswith("data/"):
+            original_entries_payload_keys.append(key)
     
+    for key in new_entries_payload_keys:
+       if key not in original_entries_payload_keys:
+           match = False
+           break
+       if new_entries[key] != original_entries[key]:
+           match = False
+           break
+
+    diff_set = set(original_entries_payload_keys) - set(new_entries_payload_keys)
+
+    for key in diff_set:
+        missing_entries[key] = original_entries[key]
+
+    return (match, missing_entries)
+
+
 def verify_split(bag_dir, bags_dir=None, no_verify=False):
     """
     Verify that a bag split went okay.
@@ -96,9 +121,9 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
     if bags_dir == None:
         bags_dir = bag_dir + "_split"
 
-    # Bag directories better be valid or somebody's getting stabbed
     if not os.path.isdir(bag_dir):
-        raise RuntimeError("no such bag directory %s" % bags_dir)
+        raise RuntimeError("no such bag directory %s" % bag_dir)
+
     if not os.path.isdir(bags_dir):
         raise RuntimeError("no such bags directory %s" % bags_dir)
 
@@ -118,7 +143,7 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
                 print "Verifying bag %s..." % f,
                 if bag.validate():
                     #bags.append(bag)
-                    if not f.endswith("_metadata"):
+                    if not f.endswith("__metadata"):
                         #Don't add the entries from the metadata bag, since these aren't part
                         #of the original payload
                         all_entries.update(bag.entries)
@@ -142,7 +167,8 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
 
     # Compare sums to accumulated sub-bag sums
     #if original_bag.entries == all_entries:
-    if compare_payloads(all_entries, original_bag.entries):
+    result = compare_payloads(all_entries, original_bag.entries)
+    if result[0] == True:
         print "Original manifest entries appear to be identical to the split " \
               "manifests' entries."
     else:
@@ -154,6 +180,10 @@ def verify_split(bag_dir, bags_dir=None, no_verify=False):
         print diff
         errors = True
 
+    if len(result[1]):
+        print "Warning: The following entries are present in the original bag, but not in the split bags:"
+        print result[1]
+
     return not errors
 
 
@@ -161,8 +191,6 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
     """
     Unsplit (merge) the bags in a given directory.
     """
-
-    # Bags directory better be valid or somebody's getting stabbed
     if not os.path.isdir(bags_dir):
         raise RuntimeError("no such bags directory %s" % bags_dir)
 
@@ -177,8 +205,13 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
     for f in os.listdir(bags_dir):
         # If f is a directory
         if os.path.isdir(os.path.join(bags_dir, f)):
-            # If f appears to be a sub-bag (ending in _#)
-            if re.match(".*_[0-9]+$", f):
+            # If f appears to be a metadata bag
+            if re.match(".*__metadata$", f):
+                meta_bag_path = os.path.join(bags_dir, f)
+            else:
+                #Anything not a metadata bag is considered a valid sub-bag. We're not
+                #enforcing it to be numerical, since this won't apply for bags split
+                #by filetype
                 bag = bagit.Bag(f)
 
                 if no_verify:
@@ -195,13 +228,14 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
                     bag.common_info.pop("Bag-Size", None)
                     bag.common_info.pop("Bag-Count", None)
                     bag.common_info.pop("Bagging-Date", None)
+                    bag.common_info.pop("File-Type", None) #Needed for when bags are split by filetype
                     bags.append(bag)
                     print "success."
                 else:
                     print "failed!"
-            # If f appears to be a metadata bag
-            elif re.match(".*_metadata$", f):
-                meta_bag_path = os.path.join(bags_dir, f)
+
+    if len(bags) < 1: #did we find any sub-bags in the directory?
+        raise RuntimeError("No split-bags found to join in path %s" % bag_dir)
     bags.sort(key=lambda bag: bag.path)
 
     # Sanity Check
@@ -244,7 +278,8 @@ def unsplit(bags_dir, merged_path=False, no_verify=False):
 
     # Compare sums to accumulated sub-bag sums
     #if merged_bag.entries == all_entries
-    if compare_payloads(merged_bag.entries, all_entries):
+    result = compare_payloads(merged_bag.entries, all_entries)
+    if result[0] == True:
         print "New manifest entries appear to be identical to the split " \
               "manifests' entries."
     else:
