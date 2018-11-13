@@ -19,7 +19,7 @@ None, but this script operates on split bags created by the Library of Congress'
 ### Splitting a Bag
 
     $ bag splitbagbysize <BAG> --maxbagsize 30
-    $ python bag-split.py split <BAG>
+    $ python bag-split.py splitcheck <BAG>
 
 The first command above uses the official BagIt command-line utility
 (`bag`) to split the original <BAG>, in this example using 30GB as the
