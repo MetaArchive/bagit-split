@@ -1,3 +1,5 @@
+# NOTE: As of 2023 this tool is no longer maintained or supported.
+
 # BagIt Splitting and Unsplitting Tools
 
 ## Overview
